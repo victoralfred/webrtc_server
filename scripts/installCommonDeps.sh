@@ -1,5 +1,4 @@
 #!/bin/bash -e
-
 pause() {
   read -p "$*"
 }
@@ -95,7 +94,7 @@ install_ffmpeg(){
 }
 
 install_zlib() {
-  local VERSION="1.3"
+  local VERSION="1.3.1"
 
   local LIST_LIBS=`ls ${PREFIX_DIR}/lib/libz* 2>/dev/null`
   [ "$INCR_INSTALL" = true ]  && [[ ! -z $LIST_LIBS ]] && \
@@ -366,7 +365,7 @@ install_webrtc(){
   mkdir $ROOT/third_party/webrtc
 
   pushd ${ROOT}/third_party/webrtc
-  git clone -b 59-server https://github.com/open-webrtc-toolkit/owt-deps-webrtc.git src
+  git clone -b 59-server git@github.com:open-webrtc-toolkit/owt-deps-webrtc.git src
   ./src/tools-woogeen/install.sh
   ./src/tools-woogeen/build.sh
   popd
@@ -588,7 +587,7 @@ install_usrsctp() {
   echo "usrsctp already installed." && return 0
 
   if [ -d $LIB_DIR ]; then
-    local USRSCTP_VERSION="30d7f1bd0b58499e1e1f2415e84d76d951665dc8"
+    local USRSCTP_VERSION="f1de842428b6d97c424e0d4b40bb4a25bd91b7ec"
     local USRSCTP_FILE="${USRSCTP_VERSION}.tar.gz"
     local USRSCTP_EXTRACT="usrsctp-${USRSCTP_VERSION}"
     local USRSCTP_URL="https://github.com/sctplab/usrsctp/archive/${USRSCTP_FILE}"

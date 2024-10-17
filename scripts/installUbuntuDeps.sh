@@ -7,7 +7,7 @@ install_apt_deps(){
   ${SUDO} apt-get install openjdk-8-jre curl libboost-test-dev nasm yasm gyp libx11-dev libkrb5-dev intel-gpu-tools -y
   ${SUDO} apt-get install m4 autoconf libtool automake cmake libfreetype6-dev libgstreamer-plugins-base1.0-dev -y
   if [ "$GITHUB_ACTIONS" != "true" ]; then
-    ${SUDO} apt-get install rabbitmq-server mongodb -y
+    ${SUDO} apt-get install rabbitmq-server mongodb-org -y
   else
     if [ -d $LIB_DIR ]; then
       echo "Installing mongodb-org from tar"

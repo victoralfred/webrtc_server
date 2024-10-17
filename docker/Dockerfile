@@ -57,7 +57,7 @@ RUN git clone ${LIBRE_REPO} && \
 
 
 # Build usrsctp
-ARG USRSCTP_VERSION="30d7f1bd0b58499e1e1f2415e84d76d951665dc8"
+ARG USRSCTP_VERSION="f1de842428b6d97c424e0d4b40bb4a25bd91b7ec"
 ARG USRSCTP_FILE="${USRSCTP_VERSION}.tar.gz"
 ARG USRSCTP_EXTRACT="usrsctp-${USRSCTP_VERSION}"
 ARG USRSCTP_URL="https://github.com/sctplab/usrsctp/archive/${USRSCTP_FILE}"
@@ -153,7 +153,15 @@ ARG OWT_BRANCH=master
 ARG IMG_APP_PATH=/app_data/
 ENV APP_PATH=${IMG_APP_PATH}
 
-RUN apt-get update && apt-get install -y -q --no-install-recommends python libglib2.0-dev rabbitmq-server mongodb libboost-thread-dev libboost-system-dev liblog4cxx-dev libgstreamer-plugins-base1.0-dev
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=America/New_York
+
+RUN apt install gnupg2  -y
+RUN curl -fsSL https://www.mongodb.org/static/pgp/server-4.4.asc | apt-key add - && echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu bionic/mongodb-org/4.4 multiverse" |  tee /etc/apt/sources.list.d/mongodb-org-4.4.list
+RUN apt-get update && apt-get install -y -q --no-install-recommends python libglib2.0-dev rabbitmq-server mongodb-org libboost-thread-dev libboost-system-dev liblog4cxx-dev libgstreamer-plugins-base1.0-dev tzdata  && \
+ln -fs /usr/share/zoneinfo/$TZ /etc/localtime && \
+dpkg-reconfigure --frontend noninteractive tzdata
 
 # 1. Clone OWT server source code 
 # 2. Clone licode source code and patch

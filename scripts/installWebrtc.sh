@@ -73,7 +73,7 @@ download_and_build(){
   if [ -d src ]; then
     echo "src already exists."
   else
-    git clone -b 88-sdk https://github.com/open-webrtc-toolkit/owt-deps-webrtc.git src
+    git clone -b 88-sdk git@github.com:open-webrtc-toolkit/owt-deps-webrtc.git src
     pushd src >/dev/null
     git reset --hard 0d230afe9c7a968c0f2d966ef9d4d396fee489bf
     popd >/dev/null
