@@ -10,7 +10,6 @@ WORKDIR /home
 # COMMON BUILD TOOLS
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y -q --no-install-recommends build-essential autoconf make git wget pciutils cpio libtool lsb-release ca-certificates pkg-config bison flex libcurl4-gnutls-dev zlib1g-dev nasm yasm m4 autoconf libtool automake cmake libfreetype6-dev libgstreamer-plugins-base1.0-dev
 
-
 # Build libnice
 ARG NICE_VER="0.1.4"
 ARG NICE_REPO=http://nice.freedesktop.org/releases/libnice-${NICE_VER}.tar.gz
@@ -153,7 +152,6 @@ ARG OWT_BRANCH=master
 ARG IMG_APP_PATH=/app_data/
 ENV APP_PATH=${IMG_APP_PATH}
 
-
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=America/New_York
 
@@ -232,11 +230,11 @@ RUN wget ${NODE_REPO} && \
     cp node-*/* /usr/local -rf && rm -rf node-*
 
 RUN useradd -m owt && echo "owt:owt" | chpasswd && adduser owt sudo
-
+COPY certificate.pfx .
 COPY --chown=owt:owt --from=owt-build /home/owt-server/dist /home/owt
 COPY --chown=owt:owt startowt.sh /home/
 
-USER owt
+USER root
 
 CMD /bin/bash
 ENV LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib/x86_64-linux-gnu

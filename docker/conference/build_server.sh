@@ -55,4 +55,4 @@ export LOCAL_APP_FOLDER=$LOCAL_APP_FOLDER
 
 echo Adding app in folder ${LOCAL_APP_PATH}/${LOCAL_APP_FOLDER} to Docker image ${DOCKER_IMG_NAME} ${NO_CACHE}
 
-docker-compose -f "${DOCKERFILE_PATH}/docker-compose.yml" build ${NO_CACHE}
+docker compose -f "${DOCKERFILE_PATH}/docker-compose.yml" build ${NO_CACHE}
