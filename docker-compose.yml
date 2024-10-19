@@ -5,8 +5,9 @@ services:
       - cluster_network
     volumes:
       - ${XDG_CONFIG_HOME:-$HOME/.config}/owt/certificate.pfx:/home/owt/certificate.pfx:ro
-
-    command: sh -c "/home/startowt.sh --rabbit rabbitmq:7990 --mongo ${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongo-db/admin --externalip 172.17.0.1 --network_interface docker0"
+      - ./startup.sh:/home/startup.sh  # Mount the script to the container
+    command: >
+      bash -c "chmod +x startup.sh &&  ./startup.sh"
     ports:
       - 3004:3004
       - 3000:3000
