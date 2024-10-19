@@ -1,0 +1,71 @@
+services:
+  web-rtc-server:
+    image: vicdonxp/webrtc-run
+    networks:
+      - cluster_network
+    volumes:
+      - ${XDG_CONFIG_HOME:-$HOME/.config}/owt/certificate.pfx:/home/owt/certificate.pfx:ro
+
+    command: sh -c "/home/startowt.sh --rabbit rabbitmq:7990 --mongo ${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongo-db/admin --externalip 172.17.0.1 --network_interface docker0"
+    ports:
+      - 3004:3004
+      - 3000:3000
+    depends_on:
+      mongo-db:
+          condition: service_healthy
+      rabbitmq:
+        condition: service_started
+
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: 'rabbitmq'
+    ports:
+        - 7990:5672
+        - 17990:15672
+    volumes:
+        - /owt/rabbitmq/data/:/var/lib/rabbitmq/
+        - /owt/rabbitmq/log/:/var/log/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+        - cluster_network
+
+  mongo-db:
+      image: mongo:5.0
+      container_name: mongoDB
+      ports:
+        - 27017:27017
+      environment: 
+        MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME} 
+        MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD} 
+      volumes: 
+        - mymongodata:/data/db
+        - type: bind
+          source: ${XDG_CONFIG_HOME:-$HOME/.config}/owt/
+          target: /docker-entrypoint-initdb.d/
+      healthcheck: 
+        test: echo 'db.runCommand({find:"app_db_name.devUser"}).ok' | mongosh --authenticationDatabase admin --host localhost -u ${MONGO_INITDB_ROOT_USERNAME} -p ${MONGO_INITDB_ROOT_PASSWORD} admin --quiet | grep -q 1
+        interval: 10s
+        timeout: 10s
+        retries: 3
+        start_period: 20s
+      networks:
+          - cluster_network
+  nginx:
+    image: vicdonxp/nginx
+    ports:
+      - 8090:80
+    networks:
+      - cluster_network
+    depends_on:
+      - web-rtc-server
+volumes:
+  mymongodata:
+
+networks:
+  cluster_network:
+    driver: bridge
