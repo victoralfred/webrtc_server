@@ -49,7 +49,7 @@ minport = 0 #default: 0
 #########################################################################################
 [bridge]
 # Key store path doesn't work right now.
-keystorePath = "./cert/certificate.pfx"
+keystorePath = "/home/owt/certificate.pfx"
 
 # ip address/hostname of QUIC server for media cascading is going to listen on. 
 ip_address = '' #default: ""

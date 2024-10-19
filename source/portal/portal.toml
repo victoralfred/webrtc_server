@@ -1,5 +1,5 @@
 [portal]
-keystorePath = "./cert/certificate.pfx"
+keystorePath = "/home/owt/certificate.pfx"
 hostname = "" #default: ""
 ip_address = "" #default: ""
 # Port that the socket.io server listens at.
