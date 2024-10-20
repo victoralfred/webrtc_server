@@ -6,14 +6,10 @@
 
 FROM ubuntu:18.04 AS owt-build
 WORKDIR /home
-#Given that it is a minimal install of Ubuntu, this image only includes the C, C.UTF-8, 
-#and POSIX locales by default. For most uses requiring a UTF-8 locale,
-# C.UTF-8 is likely sufficient (-e LANG=C.UTF-8 or ENV LANG C.UTF-8).
-RUN apt-get update && apt-get install -y locales && rm -rf /var/lib/apt/lists/* \
-	&& localedef -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8
-ENV LANG en_US.utf8
+
 # COMMON BUILD TOOLS
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y -q --no-install-recommends build-essential autoconf make git wget pciutils cpio libtool lsb-release ca-certificates pkg-config bison flex libcurl4-gnutls-dev zlib1g-dev nasm yasm m4 autoconf libtool automake cmake libfreetype6-dev libgstreamer-plugins-base1.0-dev
+
 
 # Build libnice
 ARG NICE_VER="0.1.4"
@@ -48,11 +44,9 @@ RUN wget -O - ${OPENSSL_REPO} | tar xz && \
     make -s V=0  && \
     make install
 
-# Ensure that you are including the right 
-# header files that define getc_unlocked. It is defined in <stdio.h>. Add this at the top of your file if it isn't already included:
-# sudo nano /usr/include/x86_64-linux-gnu/bits/stdio2.h
-# Build libre, bump to v0.6.1
-ARG LIBRE_VER="v0.6.1"
+
+# Build libre
+ARG LIBRE_VER="v0.5.0"
 ARG LIBRE_REPO=https://github.com/creytiv/re.git
 
 RUN git clone ${LIBRE_REPO} && \
@@ -63,7 +57,7 @@ RUN git clone ${LIBRE_REPO} && \
 
 
 # Build usrsctp
-ARG USRSCTP_VERSION="07f871bda23943c43c9e74cc54f25130459de830"
+ARG USRSCTP_VERSION="f1de842428b6d97c424e0d4b40bb4a25bd91b7ec"
 ARG USRSCTP_FILE="${USRSCTP_VERSION}.tar.gz"
 ARG USRSCTP_EXTRACT="usrsctp-${USRSCTP_VERSION}"
 ARG USRSCTP_URL="https://github.com/sctplab/usrsctp/archive/${USRSCTP_FILE}"
@@ -129,7 +123,7 @@ RUN git clone ${SVT_HEVC_REPO} && \
     mkdir -p ../../Bin/Release && \
     cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_INSTALL_LIBDIR=lib/x86_64-linux-gnu -DCMAKE_ASM_NASM_COMPILER=yasm ../.. && \
     make -j8 && \
-    make install 
+    make install
 
 
 # Install json_hpp
@@ -158,6 +152,8 @@ ARG OWT_SDK_REPO=https://github.com/open-webrtc-toolkit/owt-client-javascript.gi
 ARG OWT_BRANCH=master
 ARG IMG_APP_PATH=/app_data/
 ENV APP_PATH=${IMG_APP_PATH}
+
+
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=America/New_York
 
@@ -167,7 +163,7 @@ RUN apt-get update && apt-get install -y -q --no-install-recommends python libgl
 ln -fs /usr/share/zoneinfo/$TZ /etc/localtime && \
 dpkg-reconfigure --frontend noninteractive tzdata
 
-# 1. Clone OWT server source code 
+# 1. Clone OWT server source code
 # 2. Clone licode source code and patch
 # 3. Clone webrtc source code and patch
 RUN git config --global user.email "you@example.com" && \
@@ -189,7 +185,7 @@ RUN git config --global user.email "you@example.com" && \
     ln -s -v ${OPENH264_BINARYNAME} libopenh264.so.${OPENH264_SOVER} && \
     ln -s -v libopenh264.so.${OPENH264_SOVER} libopenh264.so && \
     echo 'const char* stub() {return "this is a stub lib";}' > pseudo-openh264.cpp && \
-    gcc pseudo-openh264.cpp -fPIC -shared -o pseudo-openh264.so 
+    gcc pseudo-openh264.cpp -fPIC -shared -o pseudo-openh264.so
 
 # Get licode for owt
 RUN cd ${SERVER_PATH}/third_party && git clone ${LICODE_REPO} && \
@@ -202,7 +198,7 @@ RUN cd ${SERVER_PATH}/third_party && mkdir webrtc  && cd webrtc &&\
     export GIT_SSL_NO_VERIFY=1 && \
     git clone -b 59-server ${WEBRTC_REPO} src && \
     ./src/tools-woogeen/install.sh && \
-    ./src/tools-woogeen/build.sh 
+    ./src/tools-woogeen/build.sh
 
 # Install webrtc88 for owt
 RUN mkdir ${SERVER_PATH}/third_party/webrtc-m88 && \
@@ -215,15 +211,11 @@ RUN cd /home && git clone --depth=1 -b ${OWT_BRANCH} ${OWT_SDK_REPO} && cd owt-c
     export LD_LIBRARY_PATH=/usr/local/lib/x86_64-linux-gnu && \
     cd ${SERVER_PATH}/third_party/quic-lib && wget https://github.com/open-webrtc-toolkit/owt-deps-quic/releases/download/v0.1/dist.tgz && tar xzf dist.tgz && \
     #Build and pack owt
-    cd ${SERVER_PATH} && export PKG_CONFIG_PATH=/usr/local/lib/x86_64-linux-gnu/pkgconfig \ 
-    && ./scripts/build.js -t mcu-all -lp /usr/local/ssl/lib -ip /usr/local/ssl/include -r -c 
-    # && \
- #   ./scripts/pack.js -t all --install-module --no-pseudo --app-path /home/owt-client-javascript/dist/samples/conference
- #   make clean && make
+    cd ${SERVER_PATH} && export PKG_CONFIG_PATH=/usr/local/lib/x86_64-linux-gnu/pkgconfig && ./scripts/build.js -t mcu-all -lp /usr/local/ssl/lib -ip /usr/local/ssl/include -r -c && \
+    ./scripts/pack.js -t all --install-module --no-pseudo --app-path /home/owt-client-javascript/dist/samples/conference
 
 
 FROM ubuntu:18.04 AS owt-run
-
 LABEL Description="This is the image for building OWT on Ubuntu 18.04"
 LABEL Vendor="Intel Corporation"
 WORKDIR /home
@@ -232,29 +224,18 @@ WORKDIR /home
 # Install node
 ARG NODE_VER=v14.19.0
 ARG NODE_REPO=https://nodejs.org/dist/${NODE_VER}/node-${NODE_VER}-linux-x64.tar.xz
-# COMMON BUILD TOOLS
-
-RUN apt update &&\
-    apt install -y -q --no-install-recommends ca-certificates wget xz-utils rabbitmq-server \
-    libboost-system-dev libboost-thread-dev liblog4cxx-dev libglib2.0-0 libfreetype6-dev \
-    libgstreamer-plugins-base1.0-0 curl tzdata curl gnupg
-
-RUN curl -fsSL https://www.mongodb.org/static/pgp/server-4.4.asc | apt-key add - && \
-    echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu bionic/mongodb-org/4.4 multiverse" \
-    | tee /etc/apt/sources.list.d/mongodb-org-4.4.list
-
-RUN apt update && apt install -y -q mongodb-org 
+USER root
+RUN apt-get update && apt-get install -y -q --no-install-recommends ca-certificates wget xz-utils rabbitmq-server mongodb libboost-system-dev libboost-thread-dev liblog4cxx-dev libglib2.0-0 libfreetype6-dev libgstreamer-plugins-base1.0-0 curl sudo
 
 RUN wget ${NODE_REPO} && \
     tar xf node-${NODE_VER}-linux-x64.tar.xz && \
     cp node-*/* /usr/local -rf && rm -rf node-*
 
 RUN useradd -m owt && echo "owt:owt" | chpasswd && adduser owt sudo
-COPY certificate.pfx .
+
 COPY --chown=owt:owt --from=owt-build /home/owt-server/dist /home/owt
 COPY --chown=owt:owt startowt.sh /home/
 
-USER root
 
 CMD /bin/bash
 ENV LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib/x86_64-linux-gnu
