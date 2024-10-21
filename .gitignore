@@ -16,4 +16,3 @@ node_modules/
 *.a
 *.so
 .env
-cert/
